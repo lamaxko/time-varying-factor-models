@@ -1,7 +1,7 @@
 import pandas as pd
 from datetime import date
 
-from time_series import TimeSeries
+from time_series import RetTimeSeries
 from db_manager import DB
 
 class FactorPortfolio:
@@ -41,7 +41,7 @@ class FactorPortfolio:
         self.returns_raw = self._get_returns()
 
         self.pct_returns = self._calc_pct_returns()
-        self.TS = TimeSeries(self.pct_returns)
+        self.TS = RetTimeSeries(self.pct_returns)
 
         self.cum_returns = self.TS.cum_returns()
         self.monthly_returns = self.TS.monthly_returns()

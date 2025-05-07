@@ -1,6 +1,6 @@
 import pandas as pd
 
-class TimeSeries:
+class RetTimeSeries:
     def __init__(self, pct_returns: pd.Series):
         self.pct_returns = pct_returns
 
