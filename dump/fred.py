@@ -16,7 +16,6 @@ class FredApi:
         self.tcode_row = self.data_raw.iloc[0]
         self.data = self.clean_data()
         self.tcodes = self.get_tcodes()
-
         self.data_stationary = self.apply_stationarity()
 
     def fetch_data(self):
@@ -27,33 +26,42 @@ class FredApi:
 
     def clean_data(self):
         df = self.data_raw.drop(index=0).reset_index(drop=True)
-        df.iloc[:, 0] = pd.to_datetime(df.iloc[:, 0])
-        return df.set_index(df.columns[0])
+        df.columns = df.columns.map(str)  # Ensure all column names are strings
+        datetime_col = df.columns[0]
+        df[datetime_col] = pd.to_datetime(df[datetime_col], errors='coerce')
+        df.set_index(datetime_col, inplace=True)
 
+        return df
     def get_tcodes(self):
         return {
             col: int(float(val))
             for col, val in self.tcode_row.items()
-            if col != self.data_raw.columns[0] and pd.notna(val) and str(val).strip().replace('.', '', 1).isdigit()
+            if col != self.data_raw.columns[0]
+            and pd.notna(val)
+            and str(val).strip().replace('.', '', 1).isdigit()
         }
 
     def apply_stationarity(self):
-        df_transformed = pd.DataFrame(index=self.data.index)
+        transformed_cols = []
 
         for col in self.data.columns:
             tcode = self.tcodes.get(col)
             series = self.data[col]
-            
+
             try:
                 tcode = int(tcode)
                 transformed = stationary(series, tcode=tcode)
-                df_transformed[col] = transformed
+                # Replace non-finite values like infs from log(0)
+                transformed = transformed.replace([np.inf, -np.inf], np.nan)
+                transformed.name = col
+                transformed_cols.append(transformed)
             except Exception as e:
                 print(f"Warning: Could not transform {col} (tcode={tcode}): {e}")
-                df_transformed[col] = np.nan  # Fill with NaN if transformation fails
+                transformed = pd.Series(np.nan, index=self.data.index, name=col)
+                transformed_cols.append(transformed)
 
-        return df_transformed
-
+        df_transformed = pd.concat(transformed_cols, axis=1)
+        return df_transformed.copy()  # Explicit defragmentation
 
     def adf_test(self, alpha=0.05):
         results = []
@@ -75,7 +83,24 @@ class FredApi:
 
         df_results = pd.DataFrame(results, columns=["Variable", "p-value", "Status"])
         return df_results.sort_values("p-value", na_position='last')
-            
+
+    def recession_indicator(self):
+        """
+        Fetches NBER US recession indicator (binary: 1 = recession, 0 = no recession).
+        Returns:
+            pd.Series: Date-indexed recession indicator (monthly frequency)
+        """
+        url = (
+            "https://fred.stlouisfed.org/graph/fredgraph.csv"
+            "?id=USREC&scale=left&cosd=1854-12-01&coed=2025-04-01&fq=Monthly"
+        )
+        response = requests.get(url)
+        response.raise_for_status()
+        df = pd.read_csv(StringIO(response.text))
+        df.columns = ['date', 'recession']
+        df['date'] = pd.to_datetime(df['date'])
+        df.set_index('date', inplace=True)
+        return df['recession'].astype(int)
 
 if __name__ == "__main__":
     fred = FredApi()
@@ -87,3 +112,4 @@ if __name__ == "__main__":
     print(fred.adf_test())
     print("\nStationary Data (head):")
     print(fred.data_stationary.head())
+    print(fred.recession_indicator())

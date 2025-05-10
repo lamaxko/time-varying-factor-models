@@ -1,11 +1,11 @@
 import os
 import sqlite3
 import pandas as pd
+from pathlib import Path
 
 class DB:
-    def __init__(self, db_path=None):
-        self.db_path = db_path or os.getenv("MS_DB_PATH")
-        self.db_path = db_path
+    def __init__(self, db_path=Path(os.getenv("MS_DB_PATH"))):
+        self.db_path = db_path 
         self.conn = sqlite3.connect(self.db_path)
         self.cursor = self.conn.cursor()
 

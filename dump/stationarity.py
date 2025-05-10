@@ -1,4 +1,3 @@
-
 import numpy as np
 import pandas as pd
 
@@ -13,13 +12,10 @@ def stationary(series, tcode=None, tname=None):
 
     Returns:
         pd.Series: Transformed series.
-
-    Usage:
-        df['Example'] = stationary(df['Example'], tcode=1)
     """
     if not isinstance(series, pd.Series):
         raise TypeError("Input must be a pandas Series.")
-    
+
     # Normalize tname if provided
     if tcode is None and tname is not None:
         tname = tname.strip().lower()
@@ -36,24 +32,29 @@ def stationary(series, tcode=None, tname=None):
         tcode = tname_map.get(tname)
         if tcode is None:
             raise ValueError(f"Unknown tname '{tname}'. Valid options: {list(tname_map.keys())}")
-    
+
     if tcode is None:
         raise ValueError("You must specify either a valid tcode or tname.")
 
-    # Apply transformation based on tcode
+    # Apply transformation safely
+    def safe_log(s):
+        with np.errstate(divide='ignore', invalid='ignore'):
+            logged = np.log(s.replace(0, np.nan))
+        return pd.Series(logged, index=s.index)
+
     if tcode == 1:
-        return np.log(series).diff()
+        return safe_log(series).diff()
     elif tcode == 2:
         return series.diff()
     elif tcode == 3:
         return series.diff().diff()
     elif tcode == 4:
-        return np.log(series).diff().diff()
+        return safe_log(series).diff().diff()
     elif tcode == 5:
-        return np.log(series)
+        return safe_log(series)
     elif tcode == 6:
-        return series.pct_change() * 100
+        return series.pct_change(fill_method=None) * 100
     elif tcode == 7:
-        return series.pct_change().diff().diff() * 100
+        return series.pct_change(fill_method=None).diff().diff() * 100
     else:
         raise ValueError(f"Invalid tcode '{tcode}'. Must be an integer between 1 and 7.")
