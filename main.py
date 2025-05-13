@@ -55,7 +55,7 @@ for step in range(n_steps):
     g = cond_net(x_g).squeeze()
 
     # clip extreme values early in training for stability
-    omega = torch.clamp(omega, 0, 5)
+    # omega = torch.clamp(omega, 0, 5)
     g = torch.clamp(g, -5, 5)
 
     # Construct stochastic discount factor (scalar)
