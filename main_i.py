@@ -83,3 +83,49 @@ for epoch in range(n_epochs):
         print(f"  M = {M.item():.6f}, ω·R sum = {(omega * y).sum().item():.6f}")
         print(f"  ω.mean = {omega.mean().item():.4f}, g.mean = {g.mean().item():.4f}")
 
+
+# Step 4: Extract final ω and g, attach to asset-level data and save
+
+# Ensure eval mode before inference
+sdf_net.eval()
+cond_net.eval()
+
+with torch.no_grad():
+    omega_final = sdf_net(x_omega).squeeze().cpu().numpy()
+    g_final = cond_net(x_g).squeeze().cpu().numpy()
+
+# Retrieve and refresh merged panel from preprocessor
+preprocessor = TensorPreprocessor(h_t, h_t_g, I_ti)
+_, _, _ = preprocessor.preprocess()
+panel_out = preprocessor.merged.copy()
+
+# Add predictions to the panel
+panel_out["omega"] = omega_final
+panel_out["g"] = g_final
+
+# ✅ Full panel with all features + omega/g
+panel_out.to_csv("trained_outputs_full.csv", index=False)
+print("[✓] Saved full panel to 'trained_outputs_full.csv'")
+
+# ✅ Save just id_stock, date, omega, and g
+panel_out[["date", "id_stock", "omega", "g"]].to_csv("trained_weights.csv", index=False)
+print("[✓] Saved weights to 'trained_weights.csv'")
+
+# Print grouped summaries
+from pandas import qcut
+
+print("\n[Decile Summary] Mean ω by MarketCap decile:")
+print(panel_out.groupby(qcut(panel_out["MarketCap"], 10))["omega"].mean())
+
+print("\n[Decile Summary] Mean g by ExcessRet decile:")
+print(panel_out.groupby(qcut(panel_out["ExcessRet"], 10))["g"].mean())
+
+# Top ω assets per month
+top_omega_assets = (
+    panel_out.sort_values("omega", ascending=False)
+    .groupby("date")
+    .head(5)[["date", "id_stock", "omega", "ExcessRet"]]
+)
+
+print("\n[Top ω Assets by Month]:")
+print(top_omega_assets.head(10))
