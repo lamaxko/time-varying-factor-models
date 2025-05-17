@@ -19,7 +19,8 @@ class SDFGan:
             if isinstance(layer, torch.nn.Linear):
                 torch.nn.init.xavier_uniform_(layer.weight)
                 if layer.bias is not None:
-                    torch.nn.init.zeros_(layer.bias)
+                    # torch.nn.init.zeros_(layer.bias)
+                    torch.nn.init.constant_(layer.bias, 0.1)
 
     def fit(self, x_omega, x_g, y, n_epochs=100, inner_steps=5):
         early_stop_counter = 0

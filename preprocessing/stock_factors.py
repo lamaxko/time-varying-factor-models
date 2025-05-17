@@ -5,8 +5,9 @@ from helpers.db_manager import DB
 from apis.kfrench import KfApi
 
 class FactorCalc:
-    def __init__(self, recalc=False):
+    def __init__(self, recalc=False, syear=2000, eyear=2023, lag=0):
 
+        self.lag = lag
         if recalc:
             returns = EquitiesAPI().returns_monthly
             self.returns = returns
@@ -15,6 +16,8 @@ class FactorCalc:
             self.index_returns = self._get_index_returns()
 
             self.upload_panel()
+        self.syear = syear
+        self.eyear = eyear
         self.panel = self.fetch_panel()
 
     def short_term_momentum(self):
@@ -142,7 +145,7 @@ class FactorCalc:
         for _, row in df.iterrows():
             for month in range(1, 13):
                 records.append({
-                    "date": pd.Timestamp(year=int(row["year"]) + 1, month=int(month), day=1),
+                    "date": pd.Timestamp(year=int(row["year"]) - self.lag, month=int(month), day=1),
                     "id_stock": int(row["id_stock"]),
                     "value": row["value"]
                 })
@@ -301,7 +304,7 @@ class FactorCalc:
         DB.upload_df(panel, table_name)
 
     def fetch_panel(self):
-        panel_df = DB.fetch("SELECT * FROM panel_data", output="df")
+        panel_df = DB.fetch(f"SELECT * FROM panel_data WHERE date BETWEEN '{self.syear}-01-01' AND '{self.eyear}-12-31' ", output="df")
         panel_df["date"] = pd.to_datetime(panel_df["date"])
         panel_df["id_stock"] = panel_df["id_stock"].astype(int)
         return panel_df

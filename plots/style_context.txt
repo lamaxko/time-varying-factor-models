@@ -1,0 +1,66 @@
+🎨 Matplotlib Style Guide Prompt for AI:
+"Generate matplotlib plots using the following visual style:
+
+Color palette:
+
+Deep Blue: #0b3c5d
+
+Mid Blue: #328cc1
+
+Light Blue: #d9eaf7
+
+Deep Red: #6b0f1a
+
+Mid Red: #c94c4c
+
+Light Red: #f9d6d5
+
+Elegant Green (Accent Only): #4c956c
+
+Bar Chart Design:
+
+Use vertical or horizontal bars.
+
+No grey or default bars.
+
+Edge color: white (linewidth=1.5), or matching soft contrast.
+
+Include bar_label for annotations with padding.
+
+Round aesthetics (if supported), padding between bars.
+
+Spines top/right removed, left/bottom faded with alpha 0.3.
+
+Line and Scatter Plots:
+
+Use deep and mid tones of red and blue.
+
+For overlaid plots, apply transparency (alpha=0.5–0.7).
+
+Markers: use circles, squares, or triangles with clear contrast (filled with edge).
+
+Use dashed or dotted lines to differentiate overlapping series.
+
+Grid & Layout:
+
+Use subtle gridlines (linestyle='--' or ':', alpha=0.3–0.5)
+
+Titles should be bold and descriptive.
+
+Legends must be used if multiple series appear.
+
+Avoid crowded axes; pad ticks slightly (tick_params(pad=6)).
+
+3D Plots (for surface or scatter):
+
+Apply same palette with gradient transitions between deep → light tones.
+
+Prefer minimal axis boxes and add grid where possible.
+
+Overall aesthetic:
+
+Clean, professional, with minimal distractions.
+
+No gray or default matplotlib styles.
+
+Every element should have visual purpose and cohesion."**

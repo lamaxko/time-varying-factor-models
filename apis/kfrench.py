@@ -40,3 +40,4 @@ class KfApi:
 if __name__ == "__main__":
     kf = KfApi()
     print(kf.ff5)
+
